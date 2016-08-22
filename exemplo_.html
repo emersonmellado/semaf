@@ -1,0 +1,419 @@
+
+<!doctype html>
+<html lang="pt_BR">
+
+    <head>
+        <meta charset="utf-8">
+
+        <title>Utilizando Node.js para automação de build e deploy no dell.com - BrazilJS 2013</title>
+
+        <meta name="description" content="A utilização de node.js para automação de build e deploy. Exemplo prático da aplicação na equipe de TNT (Testes AB e Personalização) no dell.com">
+        <meta name="author" content="Mauricio Wolff">
+
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+        <link rel="stylesheet" href="css/reveal.min.css">
+        <link rel="stylesheet" href="css/theme/mw.css" id="theme">
+
+        <!-- For syntax highlighting -->
+        <link rel="stylesheet" href="lib/css/github.css">
+
+        <!-- If the query includes 'print-pdf', use the PDF print sheet -->
+        <script>
+            document.write( '<link rel="stylesheet" href="css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+        </script>
+
+        <!--[if lt IE 9]>
+        <script src="lib/js/html5shiv.js"></script>
+        <![endif]-->
+    </head>
+
+    <body>
+
+        <div class="reveal">
+
+            <!-- Any section element inside of this container is displayed as a slide -->
+            <div class="slides">
+                <section>
+                    <img src="http://braziljs.com.br/img/BrazilJS-logo.png" alt="BrazilJS">
+                    <h5>2 0 1 3</h5>
+                </section>
+
+
+                <section data-background="#c66" data-transition="fade">
+                    <h1 class="weiss">3 Problemas</h1>
+                </section>
+
+                <section data-background="#c66" data-transition="fade">
+                <h3 class="weiss">Erros</h3>
+<pre><code data-trim contenteditable class="javascript">
+DELL.tnt.t1234 = {
+    some_prop: false,
+ 
+    someMethod: function () {    
+        'use strict';
+
+        // esqueceu o "var", ganhou uma global
+        implicit_global = true;
+
+        // some_prop é undefined. O correto seria this.some_prop
+        if (some_prop === false) {
+            // jamais entrará aqui...
+        }
+    }
+};
+</code></pre>
+                </section>
+
+                <section data-background="#c66" data-transition="fade">
+                    <h3 class="weiss">Código complexo, grande</h3>
+                    <img src="i/cms.png" alt="Código Loooongo">
+                </section>
+
+                <section data-background="#c66" data-transition="fade">
+                    <h3 class="weiss">Deploy lento e trabalhoso</h3>
+                    <img class="shadow" src="i/deploy.png" alt="Deploy lento e trabalhoso">
+                </section>
+
+                <section data-background="i/bg-cogs.png">
+                    <img src="i/node-logo.png" alt="NodeJS">
+                    <h3>Nodejs para automação de build e deploy</h3>
+                    <p>
+                        Um Estudo de Caso
+                    </p>
+                </section>
+
+                <section>
+                    <p>
+                        <img class="mug" src="i/perfil.jpg" alt="Mauricio Wolff (aka bitbonsai)">
+                    </p>
+                    <p class="bigger">Mauricio Wolff</p>
+                    <p><a href="http://twitter.com/bitbonsai">@bitbonsai</a></p>
+                    <small>
+                        <p>Test and Target Web Development Lead &mdash; dell.com</p>
+                    </small>
+                </section>
+
+                <section data-transition="fade">
+                    <p>
+                        <p class="bigger">Contexto</p>
+                        <p class="mute">Problema</p>
+                        <p class="mute">Solução</p>
+                        <p class="mute">Resultado</p>
+                    </p>
+                </section>
+
+                <section data-transition="fade">
+                    <p>
+                        <img src="i/dell_1.png" alt="DELL">
+                    </p>
+                </section>
+                <section data-transition="none">
+                    <p>
+                        <img src="i/dell_2.png" alt="DELL">
+                    </p>
+                </section>
+                <section data-transition="none">
+                    <p>
+                        <img src="i/dell_3.png" alt="DELL">
+                    </p>
+                </section>
+                <section data-transition="none">
+                    <p>
+                        <img src="i/dell_4.png" alt="DELL">
+                    </p>
+                </section>
+                <section data-transition="none">
+                    <p>
+                        <img src="i/dell_5.png" alt="DELL">
+                    </p>
+                </section>
+
+                <section>
+                    <h2>AB/N</h2>
+                    <p>WebOptimization</p>
+                    <img class="fragment roll-in" src="i/hand.png" alt="Hand">
+                </section>
+                <section data-transition="none">
+                    <img src="i/ab_1.png" alt="AB Testing">
+                </section>
+                <section data-transition="none">
+                    <img src="i/ab_2.png" alt="AB Testing">
+                </section>
+                <section data-transition="none">
+                    <img src="i/ab_3.png" alt="AB Testing">
+                </section>
+                <section data-transition="none">
+                    <img src="i/ab_4.png" alt="AB Testing">
+                </section>
+
+                <!-- <section>
+                    <h2>Test And Target (tnt)</h2>
+                    <p>
+                        <img src="i/world.png" alt="TnT pelo Mundo">
+                    </p>
+                    <p>
+                        Austin, Bangalore, Penang e Porto Alegre
+                    </p>
+                </section> -->
+
+                <section>
+                    <p>
+                        <img src="i/browser_1.png" alt="Browser">
+                    </p>
+                </section>
+
+                <section>
+<pre><code data-trim contenteditable>
+<input type="hidden" class="tt_info" value="1234" />
+<style type="text/css">
+</style>
+<!-- PLACE HTML ABOVE THE SCRIPT TAG OR REMOVE THIS COMMENT -->
+<script>
+var DELL = window.DELL || {}; DELL.tnt = DELL.tnt || {};
+ 
+DELL.tnt.t1234 = {
+    some_prop: false,
+ 
+    doSomething: function () {
+        'use strict';
+        // something here
+    },
+ 
+    init: function () {
+        'use strict';
+        this.doSomething();
+    }
+};
+
+DELL.tnt.t1234.init();
+ 
+</script>
+</code></pre>
+                </section>
+
+                <section data-transition="fade">
+                    <img src="i/chart_up.png" alt="Produtividade!">
+                </section>
+
+                <section data-background="#c66" data-transition="fade">
+                    <img src="i/chart_up.png" alt="Produtividade!">
+                </section>
+
+                <section data-transition="fade">
+                    <p>
+                        <p class="mute">Contexto</p>
+                        <p class="bigger">Problema</p>
+                        <p class="mute">Solução</p>
+                        <p class="mute">Resultado</p>
+                    </p>
+                </section>
+
+
+                <section>
+                    <img src="i/jshint.png" alt="JSHint">
+                </section>
+
+
+                <section>
+                    <img src="i/htmlcompressor.png" alt="HTML Compressor">
+                </section>
+
+                <section>
+                    <img src="i/cut.png" alt="Excelência em copy/paste">
+                </section>
+
+                <section>
+                    <img src="i/world-ide.png" alt="Editores">
+                </section>
+
+                <section data-transition="fade">
+                    <p>
+                        <p class="mute">Contexto</p>
+                        <p class="mute">Problema</p>
+                        <p class="bigger">Solução</p>
+                        <p class="mute">Resultado</p>
+                    </p>
+                </section>
+
+                <section data-background="i/bg-cogs.png">
+                    <h2>tntBuild</h2>
+                    <ul class="fragment roll-in check">
+                        <li>Validar (JSHint)</li>
+                        <li>Comprimir (HTML, CSS, JS)</li>
+                        <li>Deploy (tnt API)</li>
+                    </ul>
+
+                    <ul class="fragment roll-in check">
+                        <li>Integrável com IDEs</li>
+                        <li>Manutenção / curva fácil</li>
+                        <li>Configurável / Expansível</li>
+                    </ul>
+
+                    <img src="i/node-logo.png" alt="NodeJS">
+                </section>
+
+                <section>
+                    <img src="i/types.png" alt="Código">
+                </section>
+
+                <section>
+                    <section>
+                        <a href="http://github.com/bitbonsai/jshint-inline">github.com/bitbonsai/jshint-inline</a>
+                        <img src="i/github.png" alt="JSHint-Inline no github">
+                    </section>
+                    <section>
+                        <a href="https://sublime.wbond.net/packages/JSHint%20Inline">sublime.wbond.net/packages/JSHint%20Inline</a>
+                        <img src="i/wbond.png" alt="JSHint-Inline no Sublime Package Control">
+                    </section>
+                </section>
+
+                <section>
+                    <h3>JSHint Inline</h3>
+                    <img src="i/codigo.gif" alt="DEMO JSHint-Inline">
+                </section>
+
+                <section data-background="i/bg-cogs.png">
+                    <h2>tntBuild</h2>
+                    <ul class="check">
+                        <li class="checked">Validar (JSHint)</li>
+                        <li>Comprimir (HTML, CSS, JS)</li>
+                        <li>Deploy (tnt API)</li>
+                    </ul>
+
+                    <ul class="check">
+                        <li class="checked">Integrável com IDEs</li>
+                        <li>Manutenção / curva fácil</li>
+                        <li>Configurável / Expansível</li>
+                    </ul>
+
+                    <img src="i/node-logo.png" alt="NodeJS">
+                </section>
+
+                <section>
+                    <h3>tntBuild</h3>
+                    <img src="i/codigo.gif" alt="DEMO JSHint-Inline">
+                </section>
+
+                <section data-transition="fade">
+                    <p>
+                        <p class="mute">Contexto</p>
+                        <p class="mute">Problema</p>
+                        <p class="mute">Solução</p>
+                        <p class="bigger">Resultado</p>
+                    </p>
+                </section>
+
+                <section data-background="i/bg-cogs.png">
+                    <h2>tntBuild</h2>
+                    <ul class="check">
+                        <li class="checked">Validar (JSHint)</li>
+                        <li class="checked">Comprimir (HTML, CSS, JS)</li>
+                        <li class="checked">Deploy (tnt API)</li>
+                    </ul>
+
+                    <ul class="check">
+                        <li class="checked">Integrável com IDEs</li>
+                        <li class="checked">Manutenção / curva fácil</li>
+                        <li class="checked">Configurável / Expansível</li>
+                    </ul>
+
+                    <img src="i/node-logo.png" alt="NodeJS">
+                </section>
+
+                <section>
+                    <h2>Múltiplos Editores</h2>
+                    <p>
+                        Sublime Text 3<br>
+                        <img class="shadow" src="i/console-sublime.png" alt="Console Sublime">
+                    </p>
+                    <p>
+                        Aptana<br>
+                        <img class="shadow" src="i/console-aptana.png" alt="Console Aptana">
+                    </p>
+                </section>
+
+                <section>
+                    <p>
+                        Notepad++<br>
+                        <img class="shadow" src="i/console-notepad.png" alt="Console Notepad">
+                    </p>
+                    <p>
+                        Windows Explorer<br>
+                        <img class="shadow" src="i/console-bat1.png" alt="Windows Explorer">
+                    </p>
+                </section>
+
+                <section>
+                    <img src="i/time.png" alt="Tempo">
+                    <br>
+                    <ul>
+                        <li>Desenvolvimento</li>
+                        <li>Peer Review</li>
+                        <li>Deploy</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <img style="width: 80%" src="i/node-logo.png" alt="NodeJS">
+                    <img class="fragment roll-in" src="i/integrar.png" alt="Integrável">
+                    <img class="fragment roll-in" src="i/rapido.png" alt="Rápido">
+                    <img class="fragment roll-in" src="i/facil.png" alt="Fácil">
+                    <img class="fragment roll-in" src="i/divertido.png" alt="Divertido">
+                </section>
+
+                <section data-background="i/bg-cogs.png">
+                    <h3>Nodejs para automação de build e deploy</h3>
+
+                    <p><a href="http://twitter.com/bitbonsai">@bitbonsai</a></p>
+                    <p><a href="http://twitter.com/bitbonsai">m@bitbonsai.com</a></p>
+                    <p><a href="http://twitter.com/bitbonsai">mauricio_wolff@dell.com</a></p>
+                    <p><a href="http://bitbonsai.com/braziljs2013">bitbonsai.com/braziljs2013</a></p>
+
+                    <p style="font-size: .7em; margin: 5em 0 0 0">
+                            <img src="i/images.png" alt="Icons"><br>
+                            <a href="http://thenounproject.com/">
+                                thenounproject.com
+                            </a>
+                    </p>
+
+                </section>
+
+                <section data-background="i/bg-cogs.png">
+                    <img src="i/pontovirgula.png" alt=";">
+                </section>
+
+            </div>
+
+        </div>
+
+        <script src="lib/js/head.min.js"></script>
+        <script src="js/reveal.min.js"></script>
+
+        <script>
+
+            // Full list of configuration options available here:
+            // https://github.com/hakimel/reveal.js#configuration
+            Reveal.initialize({
+                controls: true,
+                progress: false,
+                history: true,
+                center: true,
+
+                theme: Reveal.getQueryHash().theme,
+                transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+                // Optional libraries used to extend on reveal.js
+                dependencies: [
+                    { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+                    { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+                ]
+            });
+
+        </script>
+
+    </body>
+</html>
